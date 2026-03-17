@@ -38,37 +38,6 @@
 annotate entity  ZDD_CHAMADO_ANA
     with 
 {
-// @UI.facet: [ { id: 'ChartFacet',
-//                 purpose: #HEADER,
-//                 type: #CHART_REFERENCE,
-//                 targetElement: 'TotalChamados' } ]
-
-
-//@UI.facet: [
-//    /* 1. Gráfico no Cabeçalho da Página de Detalhes */
-//    {
-//        id: 'HeaderChart',
-//        purpose: #HEADER,
-//        type: #CHART_REFERENCE,
-//        targetQualifier: 'ResumoStatus'
-//    },
-//    /* 2. Content Area: Grupo de Campos para Detalhes */
-//    {
-//        id: 'GeneralInfo',
-//        type: #COLLECTION,
-//        label: 'Informações Gerais',
-//        position: 10
-//    },
-//    {
-//        id: 'FieldGroup1',
-//        type: #FIELDGROUP_REFERENCE,
-//        label: 'Dados do Status',
-//        parentId: 'GeneralInfo',
-//        targetQualifier: 'Group1',
-//        position: 10
-//    }
-//]
-
 
 @UI.facet: [
     /* Gráfico no Header (Este já está funcionando) */
@@ -88,9 +57,6 @@ annotate entity  ZDD_CHAMADO_ANA
   ]
 
 
-
-
-
 @UI.lineItem: [{ position: 20 }]
 @UI.fieldGroup: [{ qualifier: 'Group1', position: 20 }]
 @UI.dataPoint: { title: 'Total', criticality: 'StatusCriticality'} // Adicione isso para o gráfico ter um ponto de dados
@@ -99,18 +65,7 @@ annotate entity  ZDD_CHAMADO_ANA
 @UI.fieldGroup: [{ qualifier: 'Group1', position: 10 }] //Incluir agora
 @UI.selectionField: [{ position: 10 }]
 @UI.lineItem: [{ position: 10 }]
-@UI.identification: [{ position: 10 }]
-//@UI.textArrangement: #TEXT_ONLY       
+@UI.identification: [{ position: 10 }]      
   Status;
 
-
-
-
-//@UI.dataPoint: { title: 'crit', criticality: 'StatusCriticality'  }
-//@UI.identification: [{ position: 100 }]  
-//@UI.lineItem: [{ position: 10 }] 
-//StatusCriticality;  
-  
-
-  
 }
