@@ -1,0 +1,116 @@
+@Metadata.layer: #CUSTOMER
+
+
+@UI.chart: [ {
+    qualifier: 'ResumoStatus',
+    title: 'Resumo por Status',
+    chartType: #DONUT,
+    dimensions: [ 'Status' ],
+    measures: [ 'TotalChamados' ],
+    
+    
+    dimensionAttributes: [{ 
+      dimension: 'Status', 
+      role: #CATEGORY
+
+
+    }],
+    measureAttributes: [{ 
+      measure: 'TotalChamados', 
+      role: #AXIS_1, 
+      asDataPoint: true
+     
+    }]
+  } ]
+
+
+/* 2. Faz o gráfico aparecer na tela inicial (List Report) */
+@UI.presentationVariant: [{
+    qualifier: 'Default',
+    visualizations: [{
+       type: #AS_CHART,
+        qualifier: 'ResumoStatus'
+        
+    }]
+   }]
+
+
+annotate entity  ZDD_CHAMADO_ANA
+    with 
+{
+// @UI.facet: [ { id: 'ChartFacet',
+//                 purpose: #HEADER,
+//                 type: #CHART_REFERENCE,
+//                 targetElement: 'TotalChamados' } ]
+
+
+//@UI.facet: [
+//    /* 1. Gráfico no Cabeçalho da Página de Detalhes */
+//    {
+//        id: 'HeaderChart',
+//        purpose: #HEADER,
+//        type: #CHART_REFERENCE,
+//        targetQualifier: 'ResumoStatus'
+//    },
+//    /* 2. Content Area: Grupo de Campos para Detalhes */
+//    {
+//        id: 'GeneralInfo',
+//        type: #COLLECTION,
+//        label: 'Informações Gerais',
+//        position: 10
+//    },
+//    {
+//        id: 'FieldGroup1',
+//        type: #FIELDGROUP_REFERENCE,
+//        label: 'Dados do Status',
+//        parentId: 'GeneralInfo',
+//        targetQualifier: 'Group1',
+//        position: 10
+//    }
+//]
+
+
+@UI.facet: [
+    /* Gráfico no Header (Este já está funcionando) */
+    {
+        id: 'HeaderChart',
+        purpose: #HEADER,
+        type: #CHART_REFERENCE,
+        targetQualifier: 'ResumoStatus'
+    },
+    /* Seção de Conteúdo Principal */
+    {
+        id: 'GeneralInfo',
+        type: #IDENTIFICATION_REFERENCE, // Mudamos para Identification
+        label: 'Informações do Status',
+        position: 10
+    }
+  ]
+
+
+
+
+
+@UI.lineItem: [{ position: 20 }]
+@UI.fieldGroup: [{ qualifier: 'Group1', position: 20 }]
+@UI.dataPoint: { title: 'Total', criticality: 'StatusCriticality'} // Adicione isso para o gráfico ter um ponto de dados
+  TotalChamados;
+
+@UI.fieldGroup: [{ qualifier: 'Group1', position: 10 }] //Incluir agora
+@UI.selectionField: [{ position: 10 }]
+@UI.lineItem: [{ position: 10 }]
+@UI.identification: [{ position: 10 }]
+//@UI.textArrangement: #TEXT_ONLY       
+  Status;
+
+
+
+
+//@UI.dataPoint: { title: 'crit', criticality: 'StatusCriticality'  }
+//@UI.identification: [{ position: 100 }]  
+//@UI.lineItem: [{ position: 10 }] 
+//StatusCriticality;  
+  
+
+  
+}

@@ -1,0 +1,68 @@
+managed implementation in class zbp_dd_chamado_entity unique;
+strict ( 2 );
+with draft;
+
+
+
+define behavior for ZDD_CHAMADO_ENTITY //alias <alias_name>
+persistent table zchamado
+draft table zchamado_d
+lock master total etag last_changed_at
+authorization master ( instance )
+
+// Adicione esta linha abaixo:
+early numbering
+
+{
+  create;
+  update ( features : instance );  // Instance Feature Control features : instance Bloquear a alteraçao de chamados ja encerrados.
+  delete ( features : instance );  // Instance Feature Control features : instance Bloquear a exclusão de chamados ja encerrados.
+                              // as validações são do metodo ZDD_CHAMADO_ENTITY->get_instance_features
+
+//Altera a visualizaçao do campo Solução em tempo de tela, na troca automatica.
+determination calcularVisibilidade on modify { field Status; }
+//Altera a visualizaçao do campo Solução, em tempo de tela, ao trocar para status de C concluido.
+side effects { field Status affects field SolucaoEscondida, field solucao; }
+
+// Mapeamento de campos (ESSENCIAL PARA O DRAFT)
+mapping for zchamado {
+
+    Chamadoid     = chamadoid;
+    Assunto       = assunto;
+    Descricao     = descricao;
+    Status        = status;
+    Solicitanteid = solicitanteid;
+    criado_em     = criado_em;
+    solucao       = solucao;
+  Last_changed_At = last_changed_at;
+
+}
+
+
+// Estas linhas abaixo vão matar os erros do print!
+  draft action Edit;
+  draft action Activate;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare;
+
+// field ( readonly ) Chamadoid;
+ // field ( readonly : update ) Chamadoid;
+ field ( readonly ) Chamadoid; // <-- Esta linha bloqueia a edição no Fiori
+ field ( readonly ) Solicitanteid; // <-- Esta linha bloqueia a edição no Fiori
+ field ( readonly ) Last_changed_at;
+ field ( readonly ) criado_em;
+ field ( readonly ) SolucaoEscondida;
+
+//linha da validação dentro do bloco de operações (abaixo de delete):
+//  determination setChamadoid on modify { field Chamadoid; create; }   //Alteram dados automaticamente
+  validation validarAssunto on save { field Assunto; create; }         //Verificar e barrar erros.
+  validation validarDescricao on save { field Descricao; create; update; } //Validar descrição.
+  determination SetDefaultSolicitante on modify { create; }
+  validation validarStatus on save { field Status; create; update; }
+  validation validarSolucao on save { field Status; create; update; }
+  factory action copiarChamado  [1] ; //Usamos factory action porque ela serve justamente para criar um chamado novo
+  //em cima de outro existente em tempo de tela.
+
+}
+  //uma nova instância a partir de uma existente. O [1] indica que ela opera em um registro por vez.

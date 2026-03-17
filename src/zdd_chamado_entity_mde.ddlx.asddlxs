@@ -1,0 +1,80 @@
+@Metadata.layer: #CUSTOMER
+
+
+annotate entity ZDD_CHAMADO_ENTITY
+    with 
+{
+
+
+
+    // Cria a seção visual na tela de detalhes (Object Page)
+  @UI.facet: [ 
+  
+              /* 1. FACET DO GRÁFICO (NO CABEÇALHO) */
+    {
+      id: 'GraficoHeader',
+      purpose: #STANDARD,
+      type: #CHART_REFERENCE,
+      targetQualifier: 'ResumoStatus', 
+      targetElement: '_Grafico'   
+          
+    },
+  
+        
+                { id:            'Chamado',
+                 purpose:       #STANDARD,
+                 type:          #IDENTIFICATION_REFERENCE,
+                 label:         'Informações do Chamado',
+                 position:      10 } 
+         
+                 ]
+                 
+ 
+ 
+ 
+  @UI: { lineItem:       [ { position: 10, label: 'ID Chamado' } ],
+         identification: [ { position: 10, label: 'ID Chamado' } ] }
+  Chamadoid;
+  
+  
+  @UI: { lineItem:       [ { position: 20, label: 'Assunto' } ],
+         identification: [ { position: 20, label: 'Assunto' } ] }
+  Assunto;
+
+  @UI: { lineItem:       [ { position: 30, label: 'Descrição' } ],
+         identification: [ { position: 30, label: 'Descrição' } ] }
+  Descricao;
+
+
+@UI: { lineItem:       [ { position: 40, label: 'Solicitante' } ],
+       identification: [ { position: 40, label: 'Solicitante' } ] }
+  Solicitanteid;
+
+@UI.lineItem: [ 
+    { position: 50, label: 'Status' },
+    { type: #FOR_ACTION, dataAction: 'copiarChamado', label: 'Copiar Chamado' } 
+  ]
+  @UI.identification: [ 
+    { position: 50, label: 'Status' },
+    { type: #FOR_ACTION, dataAction: 'copiarChamado', label: 'Copiar Chamado' } 
+  ]
+  Status;
+  
+  @UI.lineItem: [ { position: 60, criticality: 'StatusCriticality', label: 'Criticidade' } ]
+  StatusCriticality;
+  
+  
+@UI.identification: [{ position: 50 }]
+@UI.hidden: #(SolucaoEscondida) // Esconde o campo solução se o status for diferente de Concluído
+SolucaoEscondida;  
+  
+@UI: { lineItem:       [ { position: 60, label: 'Aberto em' } ],
+       identification: [ { position: 60, label: 'Aberto em' } ] }
+criado_em;  
+  
+@UI.hidden: #(SolucaoEscondida) // Esconde o campo solução se o status for diferente de Concluído
+@UI: { lineItem:       [ { position: 70, label: 'Solução' } ],
+       identification: [ { position: 70, label: 'Solução' } ] }
+solucao;  
+  
+  }

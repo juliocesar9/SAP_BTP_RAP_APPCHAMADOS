@@ -1,0 +1,5 @@
+@EndUserText.label: 'Service Definition para Chamados'
+define service ZUI_CHAMADO_ENTITY {
+  expose ZDD_CHAMADO_ENTITY;
+  expose ZDD_CHAMADO_ANA    as Grafico;
+}

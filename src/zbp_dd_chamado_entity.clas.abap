@@ -1,0 +1,5 @@
+CLASS zbp_dd_chamado_entity DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zdd_chamado_entity.
+ENDCLASS.
+
+CLASS zbp_dd_chamado_entity IMPLEMENTATION.
+ENDCLASS.
