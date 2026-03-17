@@ -22,12 +22,12 @@ CLASS lhc_ZDD_CHAMADO_ENTITY DEFINITION INHERITING FROM cl_abap_behavior_handler
     METHODS validarStatus FOR VALIDATE ON SAVE
       IMPORTING keys FOR zdd_chamado_entity~validarStatus.
     METHODS calcularVisibilidade FOR DETERMINE ON MODIFY
-      IMPORTING keys FOR ZDD_CHAMADO_ENTITY~calcularVisibilidade.
+      IMPORTING keys FOR zdd_chamado_entity~calcularVisibilidade.
     METHODS validarSolucao FOR VALIDATE ON SAVE
-      IMPORTING keys FOR ZDD_CHAMADO_ENTITY~validarSolucao.
+      IMPORTING keys FOR zdd_chamado_entity~validarSolucao.
 
     METHODS get_instance_features FOR INSTANCE FEATURES
-  IMPORTING keys REQUEST requested_features FOR ZDD_CHAMADO_ENTITY RESULT result.
+      IMPORTING keys REQUEST requested_features FOR zdd_chamado_entity RESULT result.
 
 
 
@@ -40,7 +40,7 @@ CLASS lhc_ZDD_CHAMADO_ENTITY IMPLEMENTATION.
 
   METHOD earlynumbering_create.
 
-  DATA: lv_max_id TYPE zchamado-chamadoid.
+    DATA: lv_max_id TYPE zchamado-chamadoid.
 
     " 1. Busca o último ID utilizado na tabela física (zchamado)
     SELECT MAX( chamadoid ) FROM zchamado INTO @lv_max_id.
@@ -59,7 +59,7 @@ CLASS lhc_ZDD_CHAMADO_ENTITY IMPLEMENTATION.
 
   METHOD copiarChamado.
 
-" 1. Lemos os dados originais
+    " 1. Lemos os dados originais
     READ ENTITIES OF zdd_chamado_entity IN LOCAL MODE
       ENTITY zdd_chamado_entity
         ALL FIELDS WITH CORRESPONDING #( keys )
@@ -75,81 +75,32 @@ CLASS lhc_ZDD_CHAMADO_ENTITY IMPLEMENTATION.
         Status    = 'A' " <-- Aqui você força o valor inicial, independente do original
     ) ).
 
-*    " 3. Disparamos a criação
-*    MODIFY ENTITIES OF zdd_chamado_entity IN LOCAL MODE
-*      ENTITY zdd_chamado_entity
-*        CREATE FIELDS ( Assunto Descricao Status ) WITH lt_novos
-*        %is_draft = if_abap_behv=>mk-on
-*      FAILED   failed
-*      REPORTED reported.
 
+    MODIFY ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+          ENTITY zdd_chamado_entity
+            CREATE FIELDS ( Assunto Descricao Status )
+            WITH VALUE #( FOR ls_n IN lt_novos (
+                %cid      = ls_n-%cid
+                Assunto   = ls_n-Assunto
+                Descricao = ls_n-Descricao
+                Status    = ls_n-Status
+                %is_draft = if_abap_behv=>mk-on " Abre a tela editável
+            ) )
+          MAPPED   DATA(lt_mapped_modify)
+          FAILED   failed
+          REPORTED reported.
 
-MODIFY ENTITIES OF zdd_chamado_entity IN LOCAL MODE
-      ENTITY zdd_chamado_entity
-        CREATE FIELDS ( Assunto Descricao Status )
-        WITH VALUE #( FOR ls_n IN lt_novos (
-            %cid      = ls_n-%cid
-            Assunto   = ls_n-Assunto
-            Descricao = ls_n-Descricao
-            Status    = ls_n-Status
-            %is_draft = if_abap_behv=>mk-on " Abre a tela editável
-        ) )
-      MAPPED   DATA(lt_mapped_modify)
-      FAILED   failed
-      REPORTED reported.
-
-" 4. Repassa o mapeamento para o Fiori navegar
-mapped-zdd_chamado_entity = lt_mapped_modify-zdd_chamado_entity.
-
-**  " 1. Lê os dados dos chamados selecionados na tela do Fiori
-**    READ ENTITIES OF ZDD_CHAMADO_ENTITY IN LOCAL MODE
-**      ENTITY ZDD_CHAMADO_ENTITY
-**      ALL FIELDS WITH CORRESPONDING #( keys )
-**      RESULT DATA(lt_chamados_origem).
-**
-**    DATA: lt_chamados_novos TYPE TABLE FOR CREATE ZDD_CHAMADO_ENTITY.
-**
-**    " 2. Prepara os dados para a criação do novo registro
-**    LOOP AT lt_chamados_origem INTO DATA(ls_origem).
-**
-**    data(lv_temp_cid) = |CID_{ sy-tabix }|.
-**
-**      APPEND VALUE #( %cid      = lv_temp_cid  " <--- A correção principal está aqui "keys[ sy-tabix ]-%cid_ref
-**                      assunto   = |Cópia: { ls_origem-Assunto }|
-**                      descricao = ls_origem-Descricao
-**                      status    = 'A' " Novo chamado sempre começa como Aberto
-**                      solicitanteid = ls_origem-Solicitanteid
-**                    ) TO lt_chamados_novos.
-**    ENDLOOP.
-**
-**    " 3. Executa a criação (o Early Numbering cuidará do novo ID)
-**    MODIFY ENTITIES OF ZDD_CHAMADO_ENTITY IN LOCAL MODE
-**      ENTITY ZDD_CHAMADO_ENTITY
-**      CREATE FIELDS ( assunto descricao status solicitanteid )
-**      WITH lt_chamados_novos
-**      MAPPED  DATA(lt_mapped_modify) " Pegamos o mapeamento aqui
-**      FAILED failed
-**      REPORTED reported.
-**
-**" 4. CRITICAL: Repassa o mapeamento para o framework exibir o registro na tela
-**" No OData V2, tente passar o conteúdo linha a linha se o '=' falhar
-**LOOP AT lt_mapped_modify-zdd_chamado_entity ASSIGNING FIELD-SYMBOL(<fs_mapped>).
-**      APPEND VALUE #( %cid = <fs_mapped>-%cid
-**                      chamadoid = <fs_mapped>-chamadoid ) TO mapped-zdd_chamado_entity.
-**    ENDLOOP.
-**
-**
-***    mapped-zdd_chamado_entity = lt_mapped_modify-zdd_chamado_entity.
-
+    " 4. Repassa o mapeamento para o Fiori navegar
+    mapped-zdd_chamado_entity = lt_mapped_modify-zdd_chamado_entity.
 
 
   ENDMETHOD.
 
   METHOD SetDefaultSolicitante.
 
-  " 1. Lê os chamados que acabaram de ser criados e ainda estão no buffer
-    READ ENTITIES OF ZDD_CHAMADO_ENTITY IN LOCAL MODE
-      ENTITY ZDD_CHAMADO_ENTITY
+    " 1. Lê os chamados que acabaram de ser criados e ainda estão no buffer
+    READ ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+      ENTITY zdd_chamado_entity
       FIELDS ( Solicitanteid ) WITH CORRESPONDING #( keys )
       RESULT DATA(lt_chamados).
 
@@ -159,8 +110,8 @@ mapped-zdd_chamado_entity = lt_mapped_modify-zdd_chamado_entity.
     CHECK lt_chamados IS NOT INITIAL.
 
     " 3. Atualiza os registros com um ID padrão (ex: seu ID de desenvolvedor)
-    MODIFY ENTITIES OF ZDD_CHAMADO_ENTITY IN LOCAL MODE
-      ENTITY ZDD_CHAMADO_ENTITY
+    MODIFY ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+      ENTITY zdd_chamado_entity
       UPDATE FIELDS ( Solicitanteid )
       WITH VALUE #( FOR ls_chamado IN lt_chamados (
                          %tky          = ls_chamado-%tky
@@ -171,15 +122,13 @@ mapped-zdd_chamado_entity = lt_mapped_modify-zdd_chamado_entity.
     " Passa eventuais mensagens para o framework
     reported = CORRESPONDING #( DEEP lt_reported ).
 
-
-
   ENDMETHOD.
 
   METHOD validarAssunto.
 
-  " 1. Lê os dados dos chamados que estão sendo validados no buffer
-    READ ENTITIES OF ZDD_CHAMADO_ENTITY IN LOCAL MODE
-      ENTITY ZDD_CHAMADO_ENTITY
+    " 1. Lê os dados dos chamados que estão sendo validados no buffer
+    READ ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+      ENTITY zdd_chamado_entity
       FIELDS ( Assunto ) WITH CORRESPONDING #( keys )
       RESULT DATA(lt_chamados).
 
@@ -206,9 +155,9 @@ mapped-zdd_chamado_entity = lt_mapped_modify-zdd_chamado_entity.
 
   METHOD validarDescricao.
 
-  " 1. Lê a descrição dos chamados que estão sendo validados
-    READ ENTITIES OF ZDD_CHAMADO_ENTITY IN LOCAL MODE
-      ENTITY ZDD_CHAMADO_ENTITY
+    " 1. Lê a descrição dos chamados que estão sendo validados
+    READ ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+      ENTITY zdd_chamado_entity
       FIELDS ( Descricao ) WITH CORRESPONDING #( keys )
       RESULT DATA(lt_chamados).
 
@@ -234,9 +183,9 @@ mapped-zdd_chamado_entity = lt_mapped_modify-zdd_chamado_entity.
 
   METHOD validarStatus.
 
-" 1. Lê o status dos chamados que estão sendo validados no buffer
-    READ ENTITIES OF ZDD_CHAMADO_ENTITY IN LOCAL MODE
-      ENTITY ZDD_CHAMADO_ENTITY
+    " 1. Lê o status dos chamados que estão sendo validados no buffer
+    READ ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+      ENTITY zdd_chamado_entity
       FIELDS ( Status ) WITH CORRESPONDING #( keys )
       RESULT DATA(lt_chamados).
 
@@ -265,42 +214,37 @@ mapped-zdd_chamado_entity = lt_mapped_modify-zdd_chamado_entity.
 
       ENDIF.
     ENDLOOP.
-
-
-
-
-
   ENDMETHOD.
 
 
   METHOD calcularVisibilidade.
 
-  READ ENTITIES OF ZDD_CHAMADO_ENTITY IN LOCAL MODE
-    ENTITY ZDD_CHAMADO_ENTITY FIELDS ( Status ) WITH CORRESPONDING #( keys )
-    RESULT DATA(lt_chamados).
+    READ ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+      ENTITY zdd_chamado_entity FIELDS ( Status ) WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_chamados).
 
-  MODIFY ENTITIES OF ZDD_CHAMADO_ENTITY IN LOCAL MODE
-    ENTITY ZDD_CHAMADO_ENTITY
-    UPDATE FIELDS ( SolucaoEscondida )
-    WITH VALUE #( FOR ls_ch IN lt_chamados (
-      %tky = ls_ch-%tky
-      SolucaoEscondida = COND #( WHEN ls_ch-Status = 'C' THEN ' ' ELSE 'X' )
-    ) ).
+    MODIFY ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+      ENTITY zdd_chamado_entity
+      UPDATE FIELDS ( SolucaoEscondida )
+      WITH VALUE #( FOR ls_ch IN lt_chamados (
+        %tky = ls_ch-%tky
+        SolucaoEscondida = COND #( WHEN ls_ch-Status = 'C' THEN ' ' ELSE 'X' )
+      ) ).
 
 
   ENDMETHOD.
 
   METHOD validarSolucao.
 
-   " 1. Lê os dados dos chamados que estão sendo validados no buffer
-    READ ENTITIES OF ZDD_CHAMADO_ENTITY IN LOCAL MODE
-      ENTITY ZDD_CHAMADO_ENTITY
+    " 1. Lê os dados dos chamados que estão sendo validados no buffer
+    READ ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+      ENTITY zdd_chamado_entity
       FIELDS ( Solucao ) WITH CORRESPONDING #( keys )
       RESULT DATA(lt_chamados).
 
     LOOP AT lt_chamados INTO DATA(ls_chamado).
       " 2. Verifica se o assunto está vazio
-      IF ls_chamado-Solucao IS INITIAL and ls_chamado-Status EQ 'C'.
+      IF ls_chamado-Solucao IS INITIAL AND ls_chamado-Status EQ 'C'.
 
         " 3. Se estiver vazio, marca o registro como falho (impede o save)
         APPEND VALUE #( %tky = ls_chamado-%tky ) TO failed-zdd_chamado_entity.
@@ -316,53 +260,48 @@ mapped-zdd_chamado_entity = lt_mapped_modify-zdd_chamado_entity.
     ENDLOOP.
   ENDMETHOD.
 
-METHOD get_instance_features.
+  METHOD get_instance_features.
 
 
-  " 1. Ler o status dos chamados solicitados
-  READ ENTITIES OF ZDD_CHAMADO_ENTITY IN LOCAL MODE
-    ENTITY ZDD_CHAMADO_ENTITY
-    FIELDS ( Status ) WITH CORRESPONDING #( keys )
-    RESULT DATA(lt_chamados).
+    " 1. Ler o status dos chamados solicitados
+    READ ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+      ENTITY zdd_chamado_entity
+      FIELDS ( Status ) WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_chamados).
 
 
+    "Busca o status do banco de dados, e verifica se ele esta concluindo o chamado no exato momento.
+    " se sim, nao bloqueia os campos, e nao bloqueia a função de update ou delete.
+
+    READ TABLE lt_chamados INTO DATA(w_chamado) INDEX 1.
+
+    SELECT SINGLE
+      FROM zchamado
+      FIELDS status
+      WHERE chamadoid = @w_chamado-chamadoid
+      INTO @DATA(status_bco).
+
+    IF status_bco NE w_chamado-Status.
+      RETURN.
+    ENDIF.
 
 
-
-"Busca o status do banco de dados, e verifica se ele esta concluindo o chamado no exato momento.
-  " se sim, nao bloqueia os campos, e nao bloqueia a função de update ou delete.
-
-read table lt_chamados into data(w_chamado) index 1.
-
-select single
-  from zchamado
-  FIELDS status
-  where chamadoid = @w_chamado-chamadoid
-  into @data(status_bco).
-
- IF status_bco NE w_chamado-Status.
-     RETURN.
- ENDIF.
-
-
-  " 2. Definir as permissões baseadas no status
-  result = VALUE #( FOR ls_ch IN lt_chamados (
-             %tky = ls_ch-%tky
+    " 2. Definir as permissões baseadas no status
+    result = VALUE #( FOR ls_ch IN lt_chamados (
+               %tky = ls_ch-%tky
 
 
 
+               " Se for 'C', Update e Delete ficam 'Disabled' (bloqueados)
+               %update = COND #( WHEN ls_ch-Status = 'C'
+                                 THEN if_abap_behv=>fc-o-disabled
+                                 ELSE if_abap_behv=>fc-o-enabled )
 
-
-             " Se for 'C', Update e Delete ficam 'Disabled' (bloqueados)
-             %update = COND #( WHEN ls_ch-Status = 'C'
-                               THEN if_abap_behv=>fc-o-disabled
-                               ELSE if_abap_behv=>fc-o-enabled )
-
-             %delete = COND #( WHEN ls_ch-Status = 'C'
-                               THEN if_abap_behv=>fc-o-disabled
-                               ELSE if_abap_behv=>fc-o-enabled )
-           ) ).
-ENDMETHOD.
+               %delete = COND #( WHEN ls_ch-Status = 'C'
+                                 THEN if_abap_behv=>fc-o-disabled
+                                 ELSE if_abap_behv=>fc-o-enabled )
+             ) ).
+  ENDMETHOD.
 
 
 ENDCLASS.
