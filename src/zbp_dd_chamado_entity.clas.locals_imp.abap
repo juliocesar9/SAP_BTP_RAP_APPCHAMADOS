@@ -109,17 +109,24 @@ CLASS lhc_ZDD_CHAMADO_ENTITY IMPLEMENTATION.
 
     CHECK lt_chamados IS NOT INITIAL.
 
-    " 3. Atualiza os registros com um ID padrão (ex: seu ID de desenvolvedor)
+  " 3. Inicializa o gerador de números aleatórios (entre 1 e 3)
+    DATA(lo_random) = cl_abap_random_int=>create( seed = cl_abap_random=>seed( )
+                                                  min  = 1
+                                                  max  = 3 ).
+
+    " 4. Atualiza os registros com o sorteio
     MODIFY ENTITIES OF zdd_chamado_entity IN LOCAL MODE
       ENTITY zdd_chamado_entity
       UPDATE FIELDS ( Solicitanteid )
-      WITH VALUE #( FOR ls_chamado IN lt_chamados (
+      WITH VALUE #( FOR ls_chamado IN lt_chamados
+                     LET lv_sorteio = lo_random->get_next( ) IN (
                          %tky          = ls_chamado-%tky
-                         Solicitanteid = 1001 " <--- Substitua pelo seu ID padrão
+                         Solicitanteid = COND #( WHEN lv_sorteio = 1 THEN 3894
+                                                 WHEN lv_sorteio = 2 THEN 7612
+                                                 ELSE 9768 )
                    ) )
       REPORTED DATA(lt_reported).
 
-    " Passa eventuais mensagens para o framework
     reported = CORRESPONDING #( DEEP lt_reported ).
 
   ENDMETHOD.
@@ -228,7 +235,7 @@ CLASS lhc_ZDD_CHAMADO_ENTITY IMPLEMENTATION.
       UPDATE FIELDS ( SolucaoEscondida )
       WITH VALUE #( FOR ls_ch IN lt_chamados (
         %tky = ls_ch-%tky
-        SolucaoEscondida = COND #( WHEN ls_ch-Status = 'C' THEN ' ' ELSE 'X' )
+        SolucaoEscondida = COND #( WHEN ls_ch-Status = 'C' THEN ' ' WHEN ls_ch-Status = '' THEN ' '  ELSE 'X' )
       ) ).
 
 

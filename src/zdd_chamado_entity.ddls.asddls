@@ -48,6 +48,7 @@ define root view entity ZDD_CHAMADO_ENTITY
       //Esconder o campo Solução.
       case status
         when 'C' then cast( ' ' as abap_boolean ) -- FALSE (Não esconde)
+        when '' then cast( 'X' as abap_boolean ) -- FALSE (Não esconde)
         else cast( 'X' as abap_boolean )          -- TRUE (Esconde)
       end  as SolucaoEscondida,
 
