@@ -28,6 +28,10 @@ CLASS lhc_ZDD_CHAMADO_ENTITY DEFINITION INHERITING FROM cl_abap_behavior_handler
 
     METHODS get_instance_features FOR INSTANCE FEATURES
       IMPORTING keys REQUEST requested_features FOR zdd_chamado_entity RESULT result.
+    METHODS setdefaultstatus FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR zdd_chamado_entity~setdefaultstatus.
+    METHODS encerrarchamado FOR MODIFY
+      IMPORTING keys FOR ACTION zdd_chamado_entity~encerrarchamado RESULT result.
 
 
 
@@ -310,5 +314,58 @@ CLASS lhc_ZDD_CHAMADO_ENTITY IMPLEMENTATION.
              ) ).
   ENDMETHOD.
 
+
+  METHOD setDefaultStatus.
+" Ao criar um novo status o status deve ser A (Aberto).
+
+" 1. Lê os chamados que estão sendo criados agora
+  READ ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+    ENTITY zdd_chamado_entity
+    FIELDS ( Status ) WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_chamados).
+
+  " 2. Filtra os que não têm status (os novos)
+  DELETE lt_chamados WHERE Status IS NOT INITIAL.
+  CHECK lt_chamados IS NOT INITIAL.
+
+  " 3. Grava o status 'A' (Aberto) neles
+  MODIFY ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+    ENTITY zdd_chamado_entity
+    UPDATE FIELDS ( Status )
+    WITH VALUE #( FOR ls_chamado IN lt_chamados (
+                       %tky   = ls_chamado-%tky
+                       Status = 'A'
+                 ) )
+    REPORTED DATA(lt_reported).
+
+  ENDMETHOD.
+
+  METHOD encerrarChamado.
+
+read table keys into data(w_key) index 1.
+
+  " 1. Modifica o status para 'C' (Concluído) dos registros selecionados
+  MODIFY ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+    ENTITY zdd_chamado_entity
+    UPDATE FIELDS ( Status Solucao )
+    WITH VALUE #( FOR key IN keys (
+                       %tky   = key-%tky
+                       Status = 'C'
+                       Solucao = w_key-%param-Solucao "keys-%param-Solucao " Pega o que foi digitado no popup
+                 ) )
+    REPORTED DATA(lt_reported).
+
+  " 2. Lê os dados atualizados para devolver o resultado para a tela
+  READ ENTITIES OF zdd_chamado_entity IN LOCAL MODE
+    ENTITY zdd_chamado_entity
+    ALL FIELDS WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_chamados).
+
+  result = VALUE #( FOR ls_chamado IN lt_chamados (
+                         %tky   = ls_chamado-%tky
+                         %param = ls_chamado
+                   ) ).
+
+  ENDMETHOD.
 
 ENDCLASS.

@@ -45,8 +45,7 @@ early numbering
   draft action Resume;
   draft determine action Prepare;
 
-  // field ( readonly ) Chamadoid;
-  // field ( readonly : update ) Chamadoid;
+
   field ( readonly ) Chamadoid; // <-- Esta linha bloqueia a edição no Fiori
   field ( readonly ) Solicitanteid; // <-- Esta linha bloqueia a edição no Fiori
   field ( readonly ) Last_changed_at;
@@ -58,9 +57,15 @@ early numbering
   validation validarAssunto on save { field Assunto; create; }         //Verificar e barrar erros.
   validation validarDescricao on save { field Descricao; create; update; } //Validar descrição.
   determination SetDefaultSolicitante on modify { create; }
+  determination setDefaultStatus on modify { create; }
   validation validarStatus on save { field Status; create; update; }
+  action ( features : instance ) encerrarChamado parameter ZABSTR_ENCERRAR_CHAMADO result [1] $self;
   validation validarSolucao on save { field Status; create; update; }
   factory action copiarChamado [1]; //Usamos factory action porque ela serve justamente para criar um chamado novo
   //em cima de outro existente em tempo de tela.
 //uma nova instância a partir de uma existente. O [1] indica que ela opera em um registro por vez.
+
+
+
+
 }

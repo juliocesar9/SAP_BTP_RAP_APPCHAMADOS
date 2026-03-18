@@ -50,13 +50,20 @@ annotate entity ZDD_CHAMADO_ENTITY
        identification: [ { position: 40, label: 'Solicitante' } ] }
   Solicitanteid;
 
+
+//encerrarChamado
+
+  
+
 @UI.lineItem: [ 
-    { position: 50, label: 'Status' },
-    { type: #FOR_ACTION, dataAction: 'copiarChamado', label: 'Copiar Chamado' } 
+      { position: 50, label: 'Status' },
+      { type: #FOR_ACTION, dataAction: 'copiarChamado',   label: 'Copiar Chamado' },
+      { type: #FOR_ACTION, dataAction: 'encerrarChamado', label: 'Encerrar Chamado' } 
   ]
   @UI.identification: [ 
-    { position: 50, label: 'Status' },
-    { type: #FOR_ACTION, dataAction: 'copiarChamado', label: 'Copiar Chamado' } 
+      { position: 50, label: 'Status' },
+      { type: #FOR_ACTION, dataAction: 'copiarChamado',   label: 'Copiar Chamado' },
+      { type: #FOR_ACTION, dataAction: 'encerrarChamado', label: 'Encerrar Chamado' } 
   ]
   Status;
   
